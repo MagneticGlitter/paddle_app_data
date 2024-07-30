@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Text, View, StyleSheet } from 'react-native';
+import { Text, View, StyleSheet, Button } from 'react-native';
 import { Accelerometer } from 'expo-sensors';
 
 export default function App() {
   const [shakeCount, setShakeCount] = useState(0);
+  const [previousAcceleration, setPreviousAcceleration] = useState(0);
+  const [isStrokeDetected, setIsStrokeDetected] = useState(false);
 
   useEffect(() => {
     Accelerometer.setUpdateInterval(1000);
@@ -17,9 +19,23 @@ export default function App() {
 
   const detectStroke = ({ x, y, z }) => {
     const acceleration = Math.sqrt(x * x + y * y + z * z);
-    if (acceleration > 1.5) {
+    // Example threshold values for detection
+    const threshold = 1.5;
+    const smoothingFactor = 0.9;
+
+    if (acceleration > threshold && !isStrokeDetected) {
       setShakeCount(prevCount => prevCount + 1);
+      setIsStrokeDetected(true);
+    } else if (acceleration < threshold) {
+      setIsStrokeDetected(false);
     }
+
+    // Apply smoothing to avoid multiple detections for the same stroke
+    setPreviousAcceleration(acceleration * smoothingFactor + previousAcceleration * (1 - smoothingFactor));
+  };
+
+  const resetCount = () => {
+    setShakeCount(0);
   };
 
   return (
@@ -28,6 +44,7 @@ export default function App() {
         <Text style={styles.count}>{shakeCount}</Text>
         <Text style={styles.label}>Strokes</Text>
       </View>
+      <Button title="Reset" onPress={resetCount} color="#FF6347" />
     </View>
   );
 }
