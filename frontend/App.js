@@ -9,7 +9,7 @@ export default function App() {
   const lastTimestampRef = useRef(0);
   
   const INTERVAL_DURATION = 1000; // 1 second
-  const PROMINENCE_THRESHOLD = 0.4;
+  const PROMINENCE_THRESHOLD = 0.2;
 
   useEffect(() => {
     Accelerometer.setUpdateInterval(1000);
