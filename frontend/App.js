@@ -1,37 +1,74 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Text, View, StyleSheet, Button } from 'react-native';
 import { Accelerometer } from 'expo-sensors';
 
+const INTERVAL_DURATION = 1000; // 1 second
+const PROMINENCE_THRESHOLD = 0.4;
+
 export default function App() {
   const [shakeCount, setShakeCount] = useState(0);
-  const [previousAcceleration, setPreviousAcceleration] = useState(0);
-  const [isStrokeDetected, setIsStrokeDetected] = useState(false);
+  const [dataBuffer, setDataBuffer] = useState([]);
+  const lastTimestampRef = useRef(0);
 
   useEffect(() => {
-    Accelerometer.setUpdateInterval(1000);
+    Accelerometer.setUpdateInterval(INTERVAL_DURATION);
 
     const subscription = Accelerometer.addListener(accelerometerData => {
-      detectStroke(accelerometerData);
+      processAccelerometerData(accelerometerData);
     });
 
     return () => subscription && subscription.remove();
   }, []);
 
-  const detectStroke = ({ x, y, z }) => {
+  const processAccelerometerData = ({ x, y, z, timestamp }) => {
     const acceleration = Math.sqrt(x * x + y * y + z * z);
-    // Example threshold values for detection
-    const threshold = 1.5;
-    const smoothingFactor = 0.9;
 
-    if (acceleration > threshold && !isStrokeDetected) {
-      setShakeCount(prevCount => prevCount + 1);
-      setIsStrokeDetected(true);
-    } else if (acceleration < threshold) {
-      setIsStrokeDetected(false);
+    // Buffer data with timestamp
+    setDataBuffer(prevBuffer => [...prevBuffer, { acceleration, timestamp }]);
+
+    // Process data if 1 second has passed
+    if (timestamp - lastTimestampRef.current >= INTERVAL_DURATION) {
+      lastTimestampRef.current = timestamp;
+
+      // Extract data for the last 1 second
+      const intervalData = dataBuffer.filter(
+        data => timestamp - data.timestamp < INTERVAL_DURATION
+      );
+
+      // Find and count peaks
+      const peaksCount = detectPeaks(intervalData);
+
+      // Update stroke count
+      setShakeCount(prevCount => prevCount + peaksCount);
+
+      // Clear buffer
+      setDataBuffer([]);
+    }
+  };
+
+  const detectPeaks = (data) => {
+    const prominences = [];
+    let min = Infinity;
+    let max = -Infinity;
+
+    for (let i = 0; i < data.length; i++) {
+      if (data[i].acceleration < min) min = data[i].acceleration;
+      if (data[i].acceleration > max) max = data[i].acceleration;
     }
 
-    // Apply smoothing to avoid multiple detections for the same stroke
-    setPreviousAcceleration(acceleration * smoothingFactor + previousAcceleration * (1 - smoothingFactor));
+    let peakCount = 0;
+    for (let i = 1; i < data.length - 1; i++) {
+      const { acceleration } = data[i];
+      if (
+        acceleration > data[i - 1].acceleration &&
+        acceleration > data[i + 1].acceleration &&
+        acceleration - min >= PROMINENCE_THRESHOLD
+      ) {
+        peakCount++;
+      }
+    }
+
+    return peakCount;
   };
 
   const resetCount = () => {
