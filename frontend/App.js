@@ -1,17 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Text, View, StyleSheet, Button } from 'react-native';
+import { Text, View, StyleSheet, TextInput, ScrollView } from 'react-native';
 import { Accelerometer } from 'expo-sensors';
-
-const INTERVAL_DURATION = 1000; // 1 second
-const PROMINENCE_THRESHOLD = 0.4;
 
 export default function App() {
   const [shakeCount, setShakeCount] = useState(0);
+  const [logs, setLogs] = useState('');
   const [dataBuffer, setDataBuffer] = useState([]);
   const lastTimestampRef = useRef(0);
+  
+  const INTERVAL_DURATION = 1000; // 1 second
+  const PROMINENCE_THRESHOLD = 0.4;
 
   useEffect(() => {
-    Accelerometer.setUpdateInterval(INTERVAL_DURATION);
+    Accelerometer.setUpdateInterval(1000);
 
     const subscription = Accelerometer.addListener(accelerometerData => {
       processAccelerometerData(accelerometerData);
@@ -22,9 +23,16 @@ export default function App() {
 
   const processAccelerometerData = ({ x, y, z, timestamp }) => {
     const acceleration = Math.sqrt(x * x + y * y + z * z);
+    const logEntry = `Timestamp: ${timestamp}, X: ${x.toFixed(2)}, Y: ${y.toFixed(2)}, Z: ${z.toFixed(2)}, Acceleration: ${acceleration.toFixed(2)}\n`;
+
+    // Update logs
+    setLogs(prevLogs => prevLogs + logEntry);
 
     // Buffer data with timestamp
-    setDataBuffer(prevBuffer => [...prevBuffer, { acceleration, timestamp }]);
+    setDataBuffer(prevBuffer => {
+      const newBuffer = [...prevBuffer, { acceleration, timestamp }];
+      return newBuffer;
+    });
 
     // Process data if 1 second has passed
     if (timestamp - lastTimestampRef.current >= INTERVAL_DURATION) {
@@ -71,7 +79,8 @@ export default function App() {
     return peakCount;
   };
 
-  const resetCount = () => {
+  const resetLogs = () => {
+    setLogs('');
     setShakeCount(0);
   };
 
@@ -81,7 +90,13 @@ export default function App() {
         <Text style={styles.count}>{shakeCount}</Text>
         <Text style={styles.label}>Strokes</Text>
       </View>
-      <Button title="Reset" onPress={resetCount} color="#FF6347" />
+      <TextInput
+        style={styles.textInput}
+        multiline
+        editable={false}
+        value={logs}
+      />
+      <Text style={styles.button} onPress={resetLogs}>Reset</Text>
     </View>
   );
 }
@@ -101,6 +116,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
+    marginBottom: 20,
   },
   count: {
     fontSize: 80,
@@ -112,5 +128,19 @@ const styles = StyleSheet.create({
     bottom: 16,
     fontSize: 18,
     color: '#9e9e9e',
+  },
+  textInput: {
+    width: '90%',
+    height: 150,
+    backgroundColor: '#2d2d2d',
+    color: '#fff',
+    padding: 10,
+    marginBottom: 20,
+  },
+  button: {
+    fontSize: 18,
+    color: '#007BFF',
+    padding: 10,
+    textDecorationLine: 'underline',
   },
 });
