@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Text, View } from 'react-native';
+import { Text, View, StyleSheet } from 'react-native';
 import { Accelerometer } from 'expo-sensors';
-import 'nativewind/tailwind.css'; 
 
 export default function App() {
   const [shakeCount, setShakeCount] = useState(0);
@@ -24,13 +23,40 @@ export default function App() {
   };
 
   return (
-    <View className="flex-1 justify-center items-center bg-[#1a1a1a]">
-      <View className="relative w-[300px] h-[300px] rounded-full bg-[#2d2d2d] flex items-center justify-center">
-        <Text className="text-8xl font-bold text-white">{shakeCount}</Text>
-        <View className="absolute bottom-4">
-          <Text className="text-lg text-[#9e9e9e]">Strokes</Text>
-        </View>
+    <View style={styles.container}>
+      <View style={styles.circle}>
+        <Text style={styles.count}>{shakeCount}</Text>
+        <Text style={styles.label}>Strokes</Text>
       </View>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#1a1a1a',
+  },
+  circle: {
+    width: 300,
+    height: 300,
+    backgroundColor: '#2d2d2d',
+    borderRadius: 150,
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+  },
+  count: {
+    fontSize: 80,
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  label: {
+    position: 'absolute',
+    bottom: 16,
+    fontSize: 18,
+    color: '#9e9e9e',
+  },
+});
