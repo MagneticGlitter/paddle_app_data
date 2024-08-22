@@ -5,22 +5,31 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#fff', 
+    backgroundColor: '#0f0f0f', // Pure black background
+  },
+  circle: {
+    width: 300, 
+    height: 300, // Increased diameter
+    borderRadius: 150, // Half of width/height
+    backgroundColor: '#2b2a2a', // Darker grey color for the circle
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
   },
   text: {
-    fontSize: 24,
+    fontSize: 48, // Larger text
     fontWeight: 'bold',
-    color: '#333',
+    color: '#fff', // Black text
   },
   button: {
     marginTop: 20,
     padding: 10,
-    backgroundColor: '#007bff',
-    borderRadius: 5,
+    backgroundColor: 'transparent', // No background color
+    borderWidth: 0, // No border
   },
   buttonText: {
-    color: '#fff',
     fontSize: 18,
+    color: '#c47d02', // Yellow text
   },
 });
 

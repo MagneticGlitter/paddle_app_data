@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Accelerometer } from 'expo-sensors';
-import styles from './styles';
+import styles from './styles'; // Ensure the path is correct
 
 interface AccelerometerData {
   x: number;
@@ -14,8 +14,8 @@ interface DataPoint {
   acceleration: number;
 }
 
-const PROMINENCE_THRESHOLD = 2;
-const MIN_PEAK_INTERVAL = 1000; // Minimum time interval between counted peaks (1 second)
+const PROMINENCE_THRESHOLD = 10;
+const MIN_PEAK_INTERVAL = 1000;
 
 const StrokeDetector: React.FC = () => {
   const [subscription, setSubscription] = useState<any>(null);
@@ -24,25 +24,20 @@ const StrokeDetector: React.FC = () => {
   const [lastStrokeTime, setLastStrokeTime] = useState<number>(0);
 
   useEffect(() => {
-    Accelerometer.setUpdateInterval(100); // Update every 100 ms
+    Accelerometer.setUpdateInterval(100);
 
     const subscription = Accelerometer.addListener((accelerometerData: AccelerometerData) => {
       const { x, y, z } = accelerometerData;
       const totalAcceleration = Math.sqrt(x ** 2 + y ** 2 + z ** 2);
       setData(prevData => [...prevData, { time: Date.now(), acceleration: totalAcceleration }]);
 
-      // Keep only the last 2 seconds of data
       const twoSecondsAgo = Date.now() - 2000;
       const filteredData = data.filter(d => d.time > twoSecondsAgo);
-
-      // Smooth the data
       const smoothedData = smoothData(filteredData);
 
-      // Detect peaks and compare to find strokes
       if (smoothedData.length > 1) {
         const peakCount = detectPeaks(smoothedData);
 
-        // Ensure we are not counting the same stroke repeatedly
         if (peakCount > 0 && Date.now() - lastStrokeTime > MIN_PEAK_INTERVAL) {
           setStrokes(prev => prev + peakCount);
           setLastStrokeTime(Date.now());
@@ -55,10 +50,9 @@ const StrokeDetector: React.FC = () => {
     return () => subscription && subscription.remove();
   }, [data]);
 
-  // Function to smooth data using moving average
   const smoothData = (data: DataPoint[]): DataPoint[] => {
     const smoothedData: DataPoint[] = [];
-    const windowSize = 5; // Adjust window size as needed
+    const windowSize = 5;
     for (let i = 0; i < data.length; i++) {
       const start = Math.max(0, i - windowSize + 1);
       const window = data.slice(start, i + 1);
@@ -68,13 +62,11 @@ const StrokeDetector: React.FC = () => {
     return smoothedData;
   };
 
-  // Function to detect peaks
   const detectPeaks = (data: DataPoint[]): number => {
     const prominences: number[] = [];
     let min = Infinity;
     let max = -Infinity;
 
-    // Find global min and max
     for (let i = 0; i < data.length; i++) {
       if (data[i].acceleration < min) min = data[i].acceleration;
       if (data[i].acceleration > max) max = data[i].acceleration;
@@ -97,7 +89,9 @@ const StrokeDetector: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>Strokes Detected: {strokes}</Text>
+      <View style={styles.circle}>
+        <Text style={styles.text}>{strokes}</Text>
+      </View>
       <TouchableOpacity style={styles.button} onPress={() => setStrokes(0)}>
         <Text style={styles.buttonText}>Reset Strokes</Text>
       </TouchableOpacity>
