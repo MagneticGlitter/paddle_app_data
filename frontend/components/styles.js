@@ -31,6 +31,15 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: '#c47d02', // Yellow text
   },
+  rateText: {
+    fontSize: 30,
+    color: '#fff',
+    marginTop: 10,
+  },
+  label: {
+    fontSize: 18,
+    color: '#9e9e9e',
+  },
 });
 
 export default styles;

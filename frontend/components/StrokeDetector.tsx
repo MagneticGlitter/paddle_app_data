@@ -14,7 +14,7 @@ interface DataPoint {
   acceleration: number;
 }
 
-const PROMINENCE_THRESHOLD = 10;
+const PROMINENCE_THRESHOLD = 3;
 const MIN_PEAK_INTERVAL = 1000;
 
 const StrokeDetector: React.FC = () => {
@@ -22,6 +22,7 @@ const StrokeDetector: React.FC = () => {
   const [data, setData] = useState<DataPoint[]>([]);
   const [strokes, setStrokes] = useState<number>(0);
   const [lastStrokeTime, setLastStrokeTime] = useState<number>(0);
+  const [strokeRate, setStrokeRate] = useState<number>(0);
 
   useEffect(() => {
     Accelerometer.setUpdateInterval(100);
@@ -42,6 +43,11 @@ const StrokeDetector: React.FC = () => {
           setStrokes(prev => prev + peakCount);
           setLastStrokeTime(Date.now());
         }
+
+        // Calculate stroke rate
+        const timeWindow = (smoothedData[smoothedData.length - 1].time - smoothedData[0].time) / 1000;
+        const rate = peakCount / timeWindow;
+        setStrokeRate(rate);
       }
     });
 
@@ -63,7 +69,6 @@ const StrokeDetector: React.FC = () => {
   };
 
   const detectPeaks = (data: DataPoint[]): number => {
-    const prominences: number[] = [];
     let min = Infinity;
     let max = -Infinity;
 
@@ -91,6 +96,9 @@ const StrokeDetector: React.FC = () => {
     <View style={styles.container}>
       <View style={styles.circle}>
         <Text style={styles.text}>{strokes}</Text>
+        <Text style={styles.label}>Strokes</Text>
+        <Text style={styles.rateText}>{strokeRate.toFixed(2)}</Text>
+        <Text style={styles.label}>Strokes/Second</Text>
       </View>
       <TouchableOpacity style={styles.button} onPress={() => setStrokes(0)}>
         <Text style={styles.buttonText}>Reset Strokes</Text>
