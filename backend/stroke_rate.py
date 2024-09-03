@@ -5,19 +5,31 @@ import numpy as np
 from scipy.ndimage import gaussian_filter1d
 from scipy.signal import find_peaks
 import os
+from io import BytesIO
 from dotenv import load_dotenv
 
 load_dotenv()
 
 
 class SignalProcessor:
-    def __init__(self, file_path):
-        self.data = pd.read_csv(file_path)
+    def __init__(self, blob):
+        # self.data = pd.read_csv(file_path)
+        self.blob = blob
+        self.data = self.load_data_from_blob()
+
+    def load_data_from_blob(self):
+        blob_content = self.blob.download_as_bytes()
+        data = pd.read_csv(BytesIO(blob_content))
+        return data
+    def get_data_length(self):
+        # Calculate the length of the data in seconds
+        start_time = self.data['seconds_elapsed'].min()
+        end_time = self.data['seconds_elapsed'].max()
+        return end_time - start_time
 
     def filter_data(self, start_time, end_time):
         return self.data[(self.data['seconds_elapsed'] >= start_time) & (self.data['seconds_elapsed'] <= end_time)]
 
-    
     def smoothed_data(self, start_time, end_time, s):
         filtered_data = self.filter_data(start_time, end_time)
         smoothed_x = gaussian_filter1d(filtered_data['x'], sigma=s)
@@ -76,14 +88,14 @@ class SignalProcessor:
         filtered_data = self.filter_data(start_time, end_time)
         smoothed_z = gaussian_filter1d(filtered_data['z'], sigma=s)
         peaks, _ = find_peaks(smoothed_z, prominence=0.2)
-        print("Number of Peaks:", len(peaks))
+        return {"Number of Peaks" : len(peaks)}
 
     def strokes_multi(self, start_time, end_time, s): 
         filtered_data = self.filter_data(start_time, end_time)
         filtered_data['total_acceleration'] = np.sqrt(filtered_data['x']**2 + filtered_data['y']**2 + filtered_data['z']**2)
         smoothed_total = gaussian_filter1d(filtered_data['total_acceleration'], sigma=s)
         peaks, _ = find_peaks(smoothed_total, prominence=0.4)
-        print("Number of Peaks:", len(peaks))
+        return {"Number of Peaks" : len(peaks)}
         
 # available data:
 #DATA_0  -> no wrist
@@ -103,5 +115,4 @@ if __name__ == '__main__':
     end = 390
     sigma_val = 12
     processor.smoothed_data(start,end,sigma_val)
-    processor.strokes_z(start,end,sigma_val)
     processor.strokes_multi(start,end,sigma_val)
