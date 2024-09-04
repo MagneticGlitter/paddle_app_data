@@ -54,3 +54,8 @@ Navigate to the backend directory:
 
 ```python app.py```
 Install any missing Python packages using pip if necessary.
+
+# Next Steps
+
+1. Render backend UI better to include stroke rate instead of just number of strokes
+2. Implement one backend to many frontend relationship using Firebase so many rowers can have their data to be seen by the coach using the backend
